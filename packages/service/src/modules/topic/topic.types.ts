@@ -34,13 +34,3 @@ export type CreateTopicBody = {
   tags?: string[];
   hotScore?: number;
 };
-
-export type VoteTopicBody = {
-  side?: string;
-};
-
-export type VoteTopicResult = {
-  topic: Topic;
-  side: TopicSideKey;
-  voteCount: number;
-};

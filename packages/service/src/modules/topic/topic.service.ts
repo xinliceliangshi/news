@@ -1,62 +1,14 @@
 import { AppError } from "../../shared/http/app-error";
 import { ensureString } from "../../shared/utils/string";
 import { prisma } from "../../lib/prisma";
-import type {
-  CreateTopicBody,
-  Topic,
-  TopicSideKey,
-  TopicStatus,
-  VoteTopicBody,
-  VoteTopicResult,
-} from "./topic.types";
-
+import { toTopic } from "./topic.mapper";
+import { parseTopicId } from "./topic.utils";
+import type { CreateTopicBody } from "./topic.types";
 type ListTopicOptions = {
   tag?: string;
   keyword?: string;
   limit?: number;
 };
-
-type TopicRecord = {
-  id: number;
-  title: string;
-  description: string;
-  sideALabel: string;
-  sideBLabel: string;
-  tags: string[];
-  hotScore: number;
-  voteCount: number;
-  status: TopicStatus;
-  publishedAt: Date;
-};
-
-function toTopic(topic: TopicRecord): Topic {
-  return {
-    id: topic.id,
-    title: topic.title,
-    description: topic.description,
-    sideA: {
-      key: "A",
-      label: topic.sideALabel,
-    },
-    sideB: {
-      key: "B",
-      label: topic.sideBLabel,
-    },
-    tags: topic.tags,
-    hotScore: topic.hotScore,
-    voteCount: topic.voteCount,
-    status: topic.status,
-    publishedAt: topic.publishedAt.toISOString(),
-  };
-}
-
-function parseTopicId(id: number) {
-  if (!Number.isInteger(id) || id <= 0) {
-    throw new AppError("invalid topic id", 400);
-  }
-
-  return id;
-}
 
 async function findTopicOrThrow(id: number) {
   const topic = await prisma.topic.findUnique({
@@ -193,43 +145,6 @@ export async function createTopic(payload: CreateTopicBody) {
   });
 
   return toTopic(topic);
-}
-
-export async function voteTopic(
-  id: number,
-  payload: VoteTopicBody,
-): Promise<VoteTopicResult> {
-  const side = ensureString(payload.side).toUpperCase();
-
-  if (side !== "A" && side !== "B") {
-    throw new AppError('side must be "A" or "B"', 400);
-  }
-
-  const topic = await findTopicOrThrow(id);
-
-  if (topic.status !== "PUBLISHED") {
-    throw new AppError("only published topics can be voted on", 400);
-  }
-
-  const updated = await prisma.topic.update({
-    where: {
-      id: topic.id,
-    },
-    data: {
-      voteCount: {
-        increment: 1,
-      },
-      hotScore: {
-        increment: 1,
-      },
-    },
-  });
-
-  return {
-    topic: toTopic(updated),
-    side: side as TopicSideKey,
-    voteCount: updated.voteCount,
-  };
 }
 
 export async function publishTopic(id: number) {

@@ -1,4 +1,5 @@
 import Router from "@koa/router";
+import { postTopicVote } from "../vote/vote.controller";
 
 import {
   getTopicDetail,
@@ -6,7 +7,6 @@ import {
   postTopic,
   postTopicArchive,
   postTopicPublish,
-  postTopicVote,
 } from "./topic.controller";
 
 export const topicRouter = new Router({

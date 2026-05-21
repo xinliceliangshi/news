@@ -7,9 +7,8 @@ import {
   getTopicById,
   listTopics,
   publishTopic,
-  voteTopic,
 } from "./topic.service";
-import type { CreateTopicBody, VoteTopicBody } from "./topic.types";
+import type { CreateTopicBody } from "./topic.types";
 
 function parseRouteId(ctx: Context) {
   return Number(ctx.params.id);
@@ -41,12 +40,6 @@ export async function getTopicDetail(ctx: Context) {
 export async function postTopic(ctx: Context) {
   const topic = await createTopic((ctx.request.body ?? {}) as CreateTopicBody);
   success(ctx, topic, "topic created", 201);
-}
-
-export async function postTopicVote(ctx: Context) {
-  const id = parseRouteId(ctx);
-  const result = await voteTopic(id, (ctx.request.body ?? {}) as VoteTopicBody);
-  success(ctx, result, "vote recorded");
 }
 
 export async function postTopicPublish(ctx: Context) {
