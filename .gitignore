@@ -1,0 +1,19 @@
+node_modules
+.DS_Store
+dist
+.vite
+coverage
+pnpm-lock.yaml
+
+# pnpm local store
+.pnpm-store
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*

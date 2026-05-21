@@ -1,0 +1,12 @@
+{
+  "name": "news-workspace",
+  "private": true,
+  "version": "0.1.0",
+  "packageManager": "pnpm@11.0.9",
+  "scripts": {
+    "dev:web": "pnpm --filter @news/web dev",
+    "dev:service": "pnpm --filter @news/service dev",
+    "build": "pnpm -r build",
+    "typecheck": "pnpm -r typecheck"
+  }
+}
