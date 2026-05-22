@@ -10,18 +10,24 @@ import DebateCardHeader from '../components/controversy/DebateCardHeader.vue'
 import OutcomeBox from '../components/controversy/OutcomeBox.vue'
 import ResultPanel from '../components/controversy/ResultPanel.vue'
 import StancePanel from '../components/controversy/StancePanel.vue'
+import MbtiSelector from '../components/controversy/MbtiSelector.vue'
 import VoteActions from '../components/controversy/VoteActions.vue'
+import { runCozeWorkflow } from '../api/coze'
 import { fetchTopicById, fetchTopics, voteOnTopic } from '../api/topic'
+import { useVoteSession } from '../composables/useVoteSession'
+import type { MbtiType } from '../constants/mbti'
 import { HttpError } from '../api/client'
 import { buildOpposingCampComments } from '../utils/campComments'
 import type { VoteSide } from '../types/controversy'
 import type { Topic, TopicSideKey, TopicSideStats } from '../types/topic'
 
 const router = useRouter()
+const { setVoteSession, patchCozeOutput } = useVoteSession()
 
 const topics = ref<Topic[]>([])
 const selectedTopicId = ref<number | null>(null)
 const selectedSide = ref<VoteSide | null>(null)
+const selectedMbti = ref<MbtiType | null>(null)
 const sideStats = ref<TopicSideStats | null>(null)
 const isLoading = ref(true)
 const isTopicLoading = ref(false)
@@ -37,6 +43,7 @@ const activeTopic = computed(() => {
 })
 
 const hasVoted = computed(() => selectedSide.value !== null)
+const canVote = computed(() => selectedMbti.value !== null)
 
 const supportRate = computed(() => sideStats.value?.sideA.percent ?? 50)
 const opposeRate = computed(() => sideStats.value?.sideB.percent ?? 50)
@@ -145,8 +152,50 @@ async function loadTopics() {
   }
 }
 
+function resolveSideLabel(side: VoteSide) {
+  if (!activeTopic.value) {
+    return ''
+  }
+
+  return side === 'support' ? activeTopic.value.sideA.label : activeTopic.value.sideB.label
+}
+
+async function triggerCozeWorkflow(side: VoteSide) {
+  if (!activeTopic.value || !selectedMbti.value) {
+    return
+  }
+
+  const sideLabel = resolveSideLabel(side)
+
+  setVoteSession({
+    topicId: activeTopic.value.id,
+    topicTitle: activeTopic.value.title,
+    side,
+    sideLabel,
+    mbti: selectedMbti.value
+  })
+
+  try {
+    const result = await runCozeWorkflow({
+      topic: activeTopic.value.title,
+      side: sideLabel,
+      mbti: selectedMbti.value
+    })
+
+    patchCozeOutput(result.data)
+  } catch (error: unknown) {
+    const message = error instanceof HttpError ? error.message : '锐评生成失败，可稍后在锐评页重试'
+    ElMessage.warning(message)
+  }
+}
+
 async function handleVote(side: VoteSide) {
   if (!activeTopic.value || isVoting.value) {
+    return
+  }
+
+  if (!selectedMbti.value) {
+    ElMessage.warning('请先选择你的 MBTI')
     return
   }
 
@@ -161,6 +210,7 @@ async function handleVote(side: VoteSide) {
     sideStats.value = result.data.sideStats
     selectedSide.value = mapTopicSideToVoteSide(result.data.side)
     ElMessage.success(result.message)
+    void triggerCozeWorkflow(side)
   } catch (error: unknown) {
     ElMessage.error(error instanceof HttpError ? error.message : '投票失败，请稍后重试')
   } finally {
@@ -174,6 +224,10 @@ function resetVote() {
 
 function selectTopic(id: number) {
   selectedTopicId.value = id
+}
+
+function goToPersonaRoast() {
+  void router.push({ name: 'personaRoast' })
 }
 
 function goToOpinions() {
@@ -258,6 +312,8 @@ onMounted(() => {
         <div v-else-if="isTopicLoading" class="vote-card__loading">正在同步战局数据…</div>
 
         <template v-if="!hasVoted">
+          <MbtiSelector v-model="selectedMbti" />
+
           <StancePanel
             :support-label="activeTopic.sideA.label"
             :oppose-label="activeTopic.sideB.label"
@@ -271,7 +327,11 @@ onMounted(() => {
             <p>站队后才会计入你的阵营，并刷新红蓝双方占比。</p>
           </section>
 
-          <VoteActions :disabled="isVoting || isTopicLoading" @vote="handleVote" />
+          <VoteActions
+            :disabled="isVoting || isTopicLoading || !canVote"
+            @vote="handleVote"
+          />
+          <p v-if="!canVote" class="vote-card__mbti-hint">选好 MBTI 后才能加入红方或蓝方。</p>
         </template>
 
         <template v-else>
@@ -292,8 +352,15 @@ onMounted(() => {
 
           <CommentPanel :comments="opposingCamp.comments" :camp-label="opposingCamp.campLabel" />
 
+          <section v-if="selectedMbti" class="vote-card__mbti-badge">
+            你的 MBTI：<strong>{{ selectedMbti }}</strong>
+          </section>
+
           <section class="vote-result-actions">
-            <el-button class="watch-button" size="large" round @click="goToOpinions">
+            <el-button class="watch-button" size="large" round @click="goToPersonaRoast">
+              🧠 查看人格锐评
+            </el-button>
+            <el-button class="watch-button watch-button--secondary" size="large" round @click="goToOpinions">
               😤 看对面怎么骂的
             </el-button>
             <el-button class="vote-reset" size="large" round plain @click="resetVote">
@@ -476,10 +543,38 @@ onMounted(() => {
   font-size: 0.86rem;
 }
 
+.vote-card__mbti-hint {
+  margin: -6px 0 0;
+  color: rgba(255, 196, 164, 0.88);
+  font-size: 0.84rem;
+  text-align: center;
+}
+
+.vote-card__mbti-badge {
+  padding: 12px 16px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(247, 241, 232, 0.72);
+  font-size: 0.9rem;
+}
+
+.vote-card__mbti-badge strong {
+  color: #fff4e5;
+}
+
 .vote-result-actions {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
+}
+
+.vote-result-actions .vote-reset {
+  grid-column: 1 / -1;
+}
+
+.watch-button--secondary {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff4e5;
 }
 
 .watch-button {
