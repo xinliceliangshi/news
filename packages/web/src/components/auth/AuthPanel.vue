@@ -1,7 +1,16 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { ElMessage } from 'element-plus'
+
+import { login, register } from '../../api/auth'
+import { HttpError } from '../../api/client'
+
+const router = useRouter()
 
 const activeTab = ref<'login' | 'register'>('login')
+const isLoginSubmitting = ref(false)
+const isRegisterSubmitting = ref(false)
 
 const loginForm = ref({
   email: '',
@@ -14,6 +23,44 @@ const registerForm = ref({
   password: '',
   confirmPassword: ''
 })
+
+async function handleLogin() {
+  if (!loginForm.value.email || !loginForm.value.password) {
+    ElMessage.warning('请输入邮箱和密码')
+    return
+  }
+
+  isLoginSubmitting.value = true
+
+  try {
+    const result = await login(loginForm.value)
+    ElMessage.success(`${result.message}：${result.data.nickname}`)
+    await router.push({ name: 'vote' })
+  } catch (error: unknown) {
+    ElMessage.error(error instanceof HttpError ? error.message : '登录失败，请稍后重试')
+  } finally {
+    isLoginSubmitting.value = false
+  }
+}
+
+async function handleRegister() {
+  if (!registerForm.value.email || !registerForm.value.password) {
+    ElMessage.warning('请输入邮箱和密码')
+    return
+  }
+
+  isRegisterSubmitting.value = true
+
+  try {
+    const result = await register(registerForm.value)
+    ElMessage.success(`${result.message}：${result.data.nickname}`)
+    await router.push({ name: 'vote' })
+  } catch (error: unknown) {
+    ElMessage.error(error instanceof HttpError ? error.message : '注册失败，请稍后重试')
+  } finally {
+    isRegisterSubmitting.value = false
+  }
+}
 </script>
 
 <template>
@@ -48,7 +95,13 @@ const registerForm = ref({
             <button type="button" class="text-link">忘记密码？</button>
           </div>
 
-          <el-button type="primary" size="large" class="auth-submit">
+          <el-button
+            type="primary"
+            size="large"
+            class="auth-submit"
+            :loading="isLoginSubmitting"
+            @click="handleLogin"
+          >
             登录进入
           </el-button>
         </el-form>
@@ -84,7 +137,13 @@ const registerForm = ref({
             />
           </el-form-item>
 
-          <el-button type="primary" size="large" class="auth-submit">
+          <el-button
+            type="primary"
+            size="large"
+            class="auth-submit"
+            :loading="isRegisterSubmitting"
+            @click="handleRegister"
+          >
             注册并开始围观
           </el-button>
         </el-form>

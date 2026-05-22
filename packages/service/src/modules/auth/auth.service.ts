@@ -11,17 +11,18 @@ function isValidEmail(email: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
+function buildDefaultNickname(email: string) {
+  return email.split("@")[0] || "user";
+}
+
 export async function registerUser(payload: RegisterBody) {
-  const nickname = ensureString(payload.nickname);
   const email = normalizeEmail(ensureString(payload.email));
   const password = ensureString(payload.password);
+  const nickname = ensureString(payload.nickname) || buildDefaultNickname(email);
   const confirmPassword = ensureString(payload.confirmPassword);
 
-  if (!nickname || !email || !password || !confirmPassword) {
-    throw new AppError(
-      "nickname, email, password and confirmPassword are required",
-      400,
-    );
+  if (!email || !password) {
+    throw new AppError("email and password are required", 400);
   }
 
   if (!isValidEmail(email)) {
@@ -32,7 +33,7 @@ export async function registerUser(payload: RegisterBody) {
     throw new AppError("password must be at least 6 characters", 400);
   }
 
-  if (password !== confirmPassword) {
+  if (confirmPassword && password !== confirmPassword) {
     throw new AppError("password and confirmPassword do not match", 400);
   }
 

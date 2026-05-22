@@ -3,6 +3,7 @@
   "private": true,
   "version": "0.1.0",
   "scripts": {
+    "predev": "lsof -ti :3000 | xargs kill -9 2>/dev/null || true",
     "dev": "ts-node-dev --respawn src/app.ts",
     "build": "tsc",
     "typecheck": "tsc --noEmit",
