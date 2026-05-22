@@ -1,4 +1,4 @@
-import type { Topic, TopicSideKey } from "../topic/topic.types";
+import type { Topic, TopicSideKey, TopicSideStats } from "../topic/topic.types";
 
 export type VoteTopicBody = {
   side?: string;
@@ -9,4 +9,5 @@ export type VoteTopicResult = {
   topic: Topic;
   side: TopicSideKey;
   voteCount: number;
+  sideStats: TopicSideStats;
 };

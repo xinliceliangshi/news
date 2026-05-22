@@ -24,7 +24,7 @@ export const staticRouter: RouteRecordRaw[] = [
         name: 'vote',
         component: () => import('@/views/VoteView.vue'),
         meta: {
-          title: '投票页'
+          title: '阵营对抗'
         }
       },
       {

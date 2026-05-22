@@ -2,6 +2,7 @@ import { prisma } from "../../lib/prisma";
 import { AppError } from "../../shared/http/app-error";
 import { ensureString } from "../../shared/utils/string";
 import { toTopic } from "../topic/topic.mapper";
+import { getTopicSideStats } from "../topic/topic.side-stats";
 import { parseTopicId } from "../topic/topic.utils";
 import type { TopicSideKey } from "../topic/topic.types";
 import type { VoteTopicBody, VoteTopicResult } from "./vote.types";
@@ -82,9 +83,15 @@ export async function voteTopic(
     });
   });
 
+  const sideStats = await getTopicSideStats(updated.id);
+
   return {
-    topic: toTopic(updated),
+    topic: {
+      ...toTopic(updated),
+      sideStats,
+    },
     side: side as TopicSideKey,
     voteCount: updated.voteCount,
+    sideStats,
   };
 }

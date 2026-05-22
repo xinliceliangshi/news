@@ -1,20 +1,30 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 
 import PageFrame from '../components/common/PageFrame.vue'
+import CampBattleMeter from '../components/controversy/CampBattleMeter.vue'
+import CommentPanel from '../components/controversy/CommentPanel.vue'
 import DebateCardHeader from '../components/controversy/DebateCardHeader.vue'
+import OutcomeBox from '../components/controversy/OutcomeBox.vue'
+import ResultPanel from '../components/controversy/ResultPanel.vue'
 import StancePanel from '../components/controversy/StancePanel.vue'
 import VoteActions from '../components/controversy/VoteActions.vue'
-import { fetchTopics, voteOnTopic } from '../api/topic'
+import { fetchTopicById, fetchTopics, voteOnTopic } from '../api/topic'
 import { HttpError } from '../api/client'
+import { buildOpposingCampComments } from '../utils/campComments'
 import type { VoteSide } from '../types/controversy'
-import type { Topic, TopicSideKey } from '../types/topic'
+import type { Topic, TopicSideKey, TopicSideStats } from '../types/topic'
+
+const router = useRouter()
 
 const topics = ref<Topic[]>([])
 const selectedTopicId = ref<number | null>(null)
 const selectedSide = ref<VoteSide | null>(null)
+const sideStats = ref<TopicSideStats | null>(null)
 const isLoading = ref(true)
+const isTopicLoading = ref(false)
 const isVoting = ref(false)
 const loadError = ref('')
 
@@ -28,12 +38,63 @@ const activeTopic = computed(() => {
 
 const hasVoted = computed(() => selectedSide.value !== null)
 
+const supportRate = computed(() => sideStats.value?.sideA.percent ?? 50)
+const opposeRate = computed(() => sideStats.value?.sideB.percent ?? 50)
+
+const isMinority = computed(() => {
+  if (!selectedSide.value || !sideStats.value) {
+    return false
+  }
+
+  const userIsSupport = selectedSide.value === 'support'
+  const supportWins = sideStats.value.sideA.percent >= sideStats.value.sideB.percent
+
+  return userIsSupport ? !supportWins : supportWins
+})
+
+const majorityLabel = computed(() => {
+  if (!activeTopic.value || !sideStats.value) {
+    return ''
+  }
+
+  return sideStats.value.sideA.percent >= sideStats.value.sideB.percent
+    ? activeTopic.value.sideA.label
+    : activeTopic.value.sideB.label
+})
+
+const userCampLabel = computed(() => {
+  if (!activeTopic.value || !selectedSide.value) {
+    return ''
+  }
+
+  return selectedSide.value === 'support'
+    ? activeTopic.value.sideA.label
+    : activeTopic.value.sideB.label
+})
+
+const opposingCamp = computed(() => {
+  if (!activeTopic.value || !selectedSide.value) {
+    return { campLabel: '', comments: [] as string[] }
+  }
+
+  return buildOpposingCampComments(activeTopic.value, selectedSide.value)
+})
+
 const formattedVoteCount = computed(() => {
   if (!activeTopic.value) {
     return '—'
   }
 
   return new Intl.NumberFormat('zh-CN').format(activeTopic.value.voteCount)
+})
+
+const iqLeft = computed(() => {
+  if (!isMinority.value) {
+    return 95
+  }
+
+  const gap = Math.abs(supportRate.value - opposeRate.value)
+  return Math.max(42, 95 - Math.round(gap / 2))
 })
 
 function mapVoteSideToTopicSide(side: VoteSide): TopicSideKey {
@@ -49,6 +110,20 @@ function replaceTopic(updated: Topic) {
 
   if (index >= 0) {
     topics.value[index] = updated
+  }
+}
+
+async function loadTopicDetail(id: number) {
+  isTopicLoading.value = true
+
+  try {
+    const result = await fetchTopicById(id)
+    replaceTopic(result.data)
+    sideStats.value = result.data.sideStats ?? null
+  } catch {
+    sideStats.value = null
+  } finally {
+    isTopicLoading.value = false
   }
 }
 
@@ -83,6 +158,7 @@ async function handleVote(side: VoteSide) {
     })
 
     replaceTopic(result.data.topic)
+    sideStats.value = result.data.sideStats
     selectedSide.value = mapTopicSideToVoteSide(result.data.side)
     ElMessage.success(result.message)
   } catch (error: unknown) {
@@ -100,8 +176,16 @@ function selectTopic(id: number) {
   selectedTopicId.value = id
 }
 
-watch(selectedTopicId, () => {
+function goToOpinions() {
+  void router.push({ name: 'otherOpinions' })
+}
+
+watch(selectedTopicId, (topicId) => {
   selectedSide.value = null
+
+  if (topicId) {
+    void loadTopicDetail(topicId)
+  }
 })
 
 onMounted(() => {
@@ -111,8 +195,8 @@ onMounted(() => {
 
 <template>
   <PageFrame
-    title="投票页"
-    description="从后端拉取已发布议题，完成站队投票并实时更新票数。"
+    title="阵营对抗"
+    description="先选议题、再站队下注。投票后实时查看红蓝双方战局、少数派压力和对面高赞火力。"
   >
     <div v-if="isLoading" class="vote-state">正在加载今日议题…</div>
 
@@ -145,13 +229,33 @@ onMounted(() => {
       </aside>
 
       <article v-if="activeTopic" class="vote-card">
-        <DebateCardHeader :title="activeTopic.title" :has-voted="hasVoted" />
+        <div class="vote-card__glow" aria-hidden="true" />
+
+        <DebateCardHeader
+          :title="activeTopic.title"
+          :has-voted="hasVoted"
+          :hot-score="activeTopic.hotScore"
+        />
 
         <p class="vote-card__description">{{ activeTopic.description }}</p>
 
         <div class="vote-card__tags">
           <span v-for="tag in activeTopic.tags" :key="tag">{{ tag }}</span>
         </div>
+
+        <CampBattleMeter
+          v-if="sideStats"
+          :support-label="activeTopic.sideA.label"
+          :oppose-label="activeTopic.sideB.label"
+          :support-percent="supportRate"
+          :oppose-percent="opposeRate"
+          :support-count="sideStats.sideA.count"
+          :oppose-count="sideStats.sideB.count"
+          :highlight-side="hasVoted ? selectedSide : null"
+          :compact="!hasVoted"
+        />
+
+        <div v-else-if="isTopicLoading" class="vote-card__loading">正在同步战局数据…</div>
 
         <template v-if="!hasVoted">
           <StancePanel
@@ -160,25 +264,42 @@ onMounted(() => {
           />
 
           <section class="vote-strip">
-            <span>当前投票人数</span>
-            <strong>{{ formattedVoteCount }}</strong>
+            <div>
+              <span>当前参战人数</span>
+              <strong>{{ formattedVoteCount }}</strong>
+            </div>
+            <p>站队后才会计入你的阵营，并刷新红蓝双方占比。</p>
           </section>
 
-          <VoteActions @vote="handleVote" />
+          <VoteActions :disabled="isVoting || isTopicLoading" @vote="handleVote" />
         </template>
 
         <template v-else>
-          <section class="vote-result">
-            <span>你的站队</span>
-            <strong>
-              {{ selectedSide === 'support' ? activeTopic.sideA.label : activeTopic.sideB.label }}
-            </strong>
-            <p>当前总票数已更新为 {{ formattedVoteCount }}</p>
-          </section>
+          <ResultPanel
+            :support-label="activeTopic.sideA.label"
+            :oppose-label="activeTopic.sideB.label"
+            :support-rate="supportRate"
+            :oppose-rate="opposeRate"
+            :user-side="selectedSide"
+          />
 
-          <el-button class="vote-reset" size="large" round plain :disabled="isVoting" @click="resetVote">
-            换一个议题继续站队
-          </el-button>
+          <OutcomeBox
+            :is-minority="isMinority"
+            :iq-left="iqLeft"
+            :user-label="userCampLabel"
+            :majority-label="majorityLabel"
+          />
+
+          <CommentPanel :comments="opposingCamp.comments" :camp-label="opposingCamp.campLabel" />
+
+          <section class="vote-result-actions">
+            <el-button class="watch-button" size="large" round @click="goToOpinions">
+              😤 看对面怎么骂的
+            </el-button>
+            <el-button class="vote-reset" size="large" round plain @click="resetVote">
+              换一个议题继续站队
+            </el-button>
+          </section>
         </template>
       </article>
     </div>
@@ -277,12 +398,27 @@ onMounted(() => {
 }
 
 .vote-card {
+  position: relative;
   display: grid;
   gap: 18px;
   padding: 22px 20px;
+  overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 22px;
-  background: rgba(255, 255, 255, 0.05);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.03)),
+    rgba(255, 255, 255, 0.02);
+}
+
+.vote-card__glow {
+  position: absolute;
+  top: -80px;
+  right: -40px;
+  width: 220px;
+  height: 220px;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(255, 138, 93, 0.18), transparent 68%);
+  pointer-events: none;
 }
 
 .vote-card__description {
@@ -304,17 +440,23 @@ onMounted(() => {
   font-size: 12px;
 }
 
-.vote-strip,
-.vote-result {
+.vote-card__loading {
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(247, 241, 232, 0.68);
+  font-size: 0.9rem;
+}
+
+.vote-strip {
   display: grid;
-  gap: 6px;
+  gap: 8px;
   padding: 16px 18px;
   border-radius: 18px;
   background: rgba(255, 255, 255, 0.04);
 }
 
-.vote-strip span,
-.vote-result span {
+.vote-strip span {
   color: rgba(199, 216, 255, 0.72);
   font-size: 12px;
   font-weight: 700;
@@ -322,73 +464,43 @@ onMounted(() => {
   text-transform: uppercase;
 }
 
-.vote-strip strong,
-.vote-result strong {
+.vote-strip strong {
+  display: block;
+  margin-top: 4px;
   font-size: 1.4rem;
 }
 
-.vote-result p {
+.vote-strip p {
   margin: 0;
   color: rgba(247, 241, 232, 0.68);
+  font-size: 0.86rem;
+}
+
+.vote-result-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.watch-button {
+  border: 0;
+  background: linear-gradient(135deg, rgba(255, 109, 69, 0.92), rgba(255, 154, 109, 0.92));
+  color: #fff7ee;
+  font-weight: 700;
 }
 
 .vote-reset {
-  justify-self: start;
-}
-
-.vote-card :deep(.stance-panel) {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-}
-
-.vote-card :deep(.stance) {
-  display: grid;
-  gap: 8px;
-  padding: 16px;
-  border-radius: 18px;
-  background: rgba(255, 255, 255, 0.04);
-}
-
-.vote-card :deep(.stance span) {
-  color: rgba(199, 216, 255, 0.72);
-  font-size: 12px;
-  font-weight: 700;
-}
-
-.vote-card :deep(.stance--support) {
-  border: 1px solid rgba(255, 110, 69, 0.28);
-}
-
-.vote-card :deep(.stance--oppose) {
-  border: 1px solid rgba(90, 140, 255, 0.28);
-}
-
-.vote-card :deep(.action-row) {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-}
-
-.vote-card :deep(.vote-button) {
-  width: 100%;
-  height: 52px;
-  border: 0;
-  font-weight: 700;
-}
-
-.vote-card :deep(.vote-button--support) {
-  background: linear-gradient(135deg, #ff6d45, #ff9a6d);
-  color: #fff7ee;
-}
-
-.vote-card :deep(.vote-button--oppose) {
-  background: linear-gradient(135deg, #5a8cff, #7baeff);
-  color: #fff7ee;
+  justify-self: stretch;
 }
 
 @media (max-width: 960px) {
   .vote-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .vote-result-actions {
     grid-template-columns: 1fr;
   }
 }

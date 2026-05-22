@@ -7,6 +7,11 @@ export type TopicSide = {
 
 export type TopicStatus = 'DRAFT' | 'PUBLISHED' | 'ARCHIVED'
 
+export type TopicSideStats = {
+  sideA: { count: number; percent: number }
+  sideB: { count: number; percent: number }
+}
+
 export type Topic = {
   id: number
   title: string
@@ -16,6 +21,7 @@ export type Topic = {
   tags: string[]
   hotScore: number
   voteCount: number
+  sideStats?: TopicSideStats
   status: TopicStatus
   publishedAt: string
 }
@@ -29,4 +35,5 @@ export type VoteTopicResult = {
   topic: Topic
   side: TopicSideKey
   voteCount: number
+  sideStats: TopicSideStats
 }

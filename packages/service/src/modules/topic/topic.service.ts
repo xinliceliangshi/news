@@ -2,6 +2,7 @@ import { AppError } from "../../shared/http/app-error";
 import { ensureString } from "../../shared/utils/string";
 import { prisma } from "../../lib/prisma";
 import { toTopic } from "./topic.mapper";
+import { getTopicSideStats } from "./topic.side-stats";
 import { parseTopicId } from "./topic.utils";
 import type { CreateTopicBody } from "./topic.types";
 type ListTopicOptions = {
@@ -110,7 +111,12 @@ export async function listTopics(options: ListTopicOptions = {}) {
 
 export async function getTopicById(id: number) {
   const topic = await findTopicOrThrow(id);
-  return toTopic(topic);
+  const sideStats = await getTopicSideStats(topic.id);
+
+  return {
+    ...toTopic(topic),
+    sideStats,
+  };
 }
 
 export async function createTopic(payload: CreateTopicBody) {

@@ -51,11 +51,19 @@ function resetVote() {
 
         <template v-else>
           <ResultPanel
+            :support-label="controversyTopic.supportLabel"
+            :oppose-label="controversyTopic.opposeLabel"
             :support-rate="controversyTopic.supportRate"
             :oppose-rate="controversyTopic.opposeRate"
+            :user-side="selectedSide"
           />
 
-          <OutcomeBox :is-minority="isMinority" :iq-left="controversyTopic.iqLeft" />
+          <OutcomeBox
+            :is-minority="isMinority"
+            :iq-left="controversyTopic.iqLeft"
+            :user-label="isMinority ? controversyTopic.opposeLabel : controversyTopic.supportLabel"
+            :majority-label="isMinority ? controversyTopic.supportLabel : controversyTopic.opposeLabel"
+          />
 
           <CommentPanel :comments="controversyComments" />
 

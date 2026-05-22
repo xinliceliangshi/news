@@ -6,7 +6,7 @@ const route = useRoute()
 
 const navItems = [
   { path: '/login', label: '登录注册', kicker: 'Entry' },
-  { path: '/vote', label: '投票页', kicker: 'Vote' },
+  { path: '/vote', label: '阵营对抗', kicker: 'Battle' },
   { path: '/persona-roast', label: '性格生成锐评页', kicker: 'Roast' },
   { path: '/other-opinions', label: '查看其他观点页', kicker: 'Opinions' },
   { path: '/summary', label: '总结页', kicker: 'Summary' }
