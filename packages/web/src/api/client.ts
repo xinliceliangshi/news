@@ -13,7 +13,7 @@ export class HttpError extends Error {
 function createApiClient() {
   const instance = axios.create({
     baseURL: import.meta.env.VITE_API_BASE_URL ?? '/api',
-    timeout: 10000
+    
   })
 
   instance.interceptors.request.use((config) => {

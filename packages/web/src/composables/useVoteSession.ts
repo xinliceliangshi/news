@@ -2,8 +2,11 @@ import { ref } from 'vue'
 
 import type { MbtiType } from '../constants/mbti'
 import type { VoteSide } from '../types/controversy'
+import type { CozeWorkflowResult } from '../utils/cozeOutput'
 
 const STORAGE_KEY = 'news:vote-session'
+
+export type CozeStatus = 'idle' | 'pending' | 'done' | 'error'
 
 export type VoteSession = {
   topicId: number
@@ -11,7 +14,8 @@ export type VoteSession = {
   side: VoteSide
   sideLabel: string
   mbti: MbtiType
-  cozeOutput?: unknown
+  cozeOutput?: CozeWorkflowResult
+  cozeStatus?: CozeStatus
 }
 
 function readSession(): VoteSession | null {
@@ -44,12 +48,26 @@ export function useVoteSession() {
     writeSession(session)
   }
 
-  function patchCozeOutput(output: unknown) {
+  function patchCozeOutput(output: CozeWorkflowResult) {
     if (!voteSession.value) {
       return
     }
 
-    const next = { ...voteSession.value, cozeOutput: output }
+    const next = {
+      ...voteSession.value,
+      cozeOutput: output,
+      cozeStatus: 'done' as const
+    }
+    voteSession.value = next
+    writeSession(next)
+  }
+
+  function patchCozeStatus(status: CozeStatus) {
+    if (!voteSession.value) {
+      return
+    }
+
+    const next = { ...voteSession.value, cozeStatus: status }
     voteSession.value = next
     writeSession(next)
   }
@@ -63,6 +81,7 @@ export function useVoteSession() {
     voteSession,
     setVoteSession,
     patchCozeOutput,
+    patchCozeStatus,
     clearVoteSession
   }
 }

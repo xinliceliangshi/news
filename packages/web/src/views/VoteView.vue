@@ -22,7 +22,7 @@ import type { VoteSide } from '../types/controversy'
 import type { Topic, TopicSideKey, TopicSideStats } from '../types/topic'
 
 const router = useRouter()
-const { setVoteSession, patchCozeOutput } = useVoteSession()
+const { setVoteSession, patchCozeOutput, patchCozeStatus } = useVoteSession()
 
 const topics = ref<Topic[]>([])
 const selectedTopicId = ref<number | null>(null)
@@ -172,7 +172,8 @@ async function triggerCozeWorkflow(side: VoteSide) {
     topicTitle: activeTopic.value.title,
     side,
     sideLabel,
-    mbti: selectedMbti.value
+    mbti: selectedMbti.value,
+    cozeStatus: 'pending'
   })
 
   try {
@@ -184,6 +185,7 @@ async function triggerCozeWorkflow(side: VoteSide) {
 
     patchCozeOutput(result.data)
   } catch (error: unknown) {
+    patchCozeStatus('error')
     const message = error instanceof HttpError ? error.message : '锐评生成失败，可稍后在锐评页重试'
     ElMessage.warning(message)
   }

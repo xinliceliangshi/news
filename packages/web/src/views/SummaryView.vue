@@ -13,7 +13,6 @@ import PageFrame from '../components/common/PageFrame.vue'
         <strong>你的站队路径</strong>
         <p>回顾用户进入、投票、看观点、生成锐评的完整轨迹。</p>
       </article>
-
       <article class="placeholder-card">
         <span>总结 B</span>
         <strong>争议最终摘要</strong>

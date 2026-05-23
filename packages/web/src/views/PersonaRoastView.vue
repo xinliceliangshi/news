@@ -1,12 +1,18 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { ElMessage } from 'element-plus'
 
 import PageFrame from '../components/common/PageFrame.vue'
+import { runCozeWorkflow } from '../api/coze'
+import { HttpError } from '../api/client'
 import { useVoteSession } from '../composables/useVoteSession'
+import { extractCozeOutput } from '../utils/cozeOutput'
 
 const router = useRouter()
-const { voteSession } = useVoteSession()
+const { voteSession, patchCozeOutput, patchCozeStatus } = useVoteSession()
+
+const isRetrying = ref(false)
 
 const hasSession = computed(() => voteSession.value !== null)
 
@@ -17,34 +23,46 @@ const roastText = computed(() => {
     return ''
   }
 
-  if (typeof output === 'string') {
-    return output
-  }
-
-  if (typeof output === 'object' && output !== null) {
-    const record = output as Record<string, unknown>
-    const data = record.data
-
-    if (typeof data === 'string') {
-      return data
-    }
-
-    if (typeof data === 'object' && data !== null) {
-      const nested = data as Record<string, unknown>
-
-      if (typeof nested.output === 'string') {
-        return nested.output
-      }
-    }
-  }
-
-  return JSON.stringify(output, null, 2)
+  return extractCozeOutput(output)
 })
 
-const isGenerating = computed(() => hasSession.value && !roastText.value)
+const cozeStatus = computed(() => voteSession.value?.cozeStatus ?? (roastText.value ? 'done' : 'idle'))
+
+const isGenerating = computed(
+  () => hasSession.value && (cozeStatus.value === 'pending' || isRetrying.value)
+)
+
+const hasFailed = computed(() => hasSession.value && cozeStatus.value === 'error' && !isRetrying.value)
 
 function goToVote() {
   void router.push({ name: 'vote' })
+}
+
+async function retryGenerate() {
+  const session = voteSession.value
+
+  if (!session || isRetrying.value) {
+    return
+  }
+
+  isRetrying.value = true
+  patchCozeStatus('pending')
+
+  try {
+    const result = await runCozeWorkflow({
+      topic: session.topicTitle,
+      side: session.sideLabel,
+      mbti: session.mbti
+    })
+
+    patchCozeOutput(result.data)
+  } catch (error: unknown) {
+    patchCozeStatus('error')
+    const message = error instanceof HttpError ? error.message : '锐评生成失败，请稍后重试'
+    ElMessage.warning(message)
+  } finally {
+    isRetrying.value = false
+  }
 }
 </script>
 
@@ -71,7 +89,14 @@ function goToVote() {
 
       <article class="placeholder-card">
         <span>锐评文案</span>
-        <strong v-if="isGenerating">正在生成，请稍候刷新…</strong>
+        <strong v-if="isGenerating">正在生成，请稍候…</strong>
+        <template v-else-if="hasFailed">
+          <strong>生成失败</strong>
+          <p>Coze 工作流暂时不可用，你可以稍后重试。</p>
+          <el-button type="primary" round :loading="isRetrying" @click="retryGenerate">
+            重新生成
+          </el-button>
+        </template>
         <p v-else class="roast-output">{{ roastText }}</p>
       </article>
     </div>
