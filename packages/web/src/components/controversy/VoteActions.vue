@@ -3,6 +3,9 @@ import type { VoteSide } from '../../types/controversy'
 
 defineProps<{
   disabled?: boolean
+  selectedSide?: VoteSide | null
+  supportText?: string
+  opposeText?: string
 }>()
 
 const emit = defineEmits<{
@@ -14,21 +17,25 @@ const emit = defineEmits<{
   <section class="action-row">
     <el-button
       class="vote-button vote-button--support"
+      :class="{ 'is-selected': selectedSide === 'support' }"
       size="large"
       round
       :disabled="disabled"
+      :aria-pressed="selectedSide === 'support'"
       @click="emit('vote', 'support')"
     >
-      🔴 加入红方
+      {{ supportText ?? '🔴 加入红方' }}
     </el-button>
     <el-button
       class="vote-button vote-button--oppose"
+      :class="{ 'is-selected': selectedSide === 'oppose' }"
       size="large"
       round
       :disabled="disabled"
+      :aria-pressed="selectedSide === 'oppose'"
       @click="emit('vote', 'oppose')"
     >
-      🔵 加入蓝方
+      {{ opposeText ?? '🔵 加入蓝方' }}
     </el-button>
   </section>
 </template>
@@ -45,6 +52,19 @@ const emit = defineEmits<{
   height: 52px;
   border: 0;
   font-weight: 700;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    filter 0.2s ease;
+}
+
+.vote-button:not(:disabled):hover {
+  transform: translateY(-1px);
+}
+
+.vote-button.is-selected {
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.22);
+  filter: saturate(1.08);
 }
 
 .vote-button--support {

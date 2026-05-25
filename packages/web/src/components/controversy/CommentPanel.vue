@@ -1,8 +1,24 @@
 <script setup lang="ts">
-defineProps<{
+import { computed, ref, watch } from 'vue'
+
+const props = defineProps<{
   comments: string[]
   campLabel?: string
 }>()
+
+const expanded = ref(false)
+
+const hasOverflow = computed(() => props.comments.length > 2)
+const visibleComments = computed(() =>
+  expanded.value || !hasOverflow.value ? props.comments : props.comments.slice(0, 2)
+)
+
+watch(
+  () => props.comments,
+  () => {
+    expanded.value = false
+  }
+)
 </script>
 
 <template>
@@ -13,11 +29,20 @@ defineProps<{
     </header>
 
     <ul>
-      <li v-for="(comment, index) in comments" :key="comment">
+      <li v-for="(comment, index) in visibleComments" :key="comment">
         <span class="comment-panel__rank">#{{ index + 1 }}</span>
         <p>{{ comment }}</p>
       </li>
     </ul>
+
+    <button
+      v-if="hasOverflow"
+      type="button"
+      class="comment-panel__toggle"
+      @click="expanded = !expanded"
+    >
+      {{ expanded ? '收起火力' : `展开剩余 ${comments.length - 2} 条高赞发言` }}
+    </button>
   </section>
 </template>
 
@@ -77,5 +102,16 @@ defineProps<{
   margin: 0;
   color: rgba(247, 241, 232, 0.82);
   line-height: 1.45;
+}
+
+.comment-panel__toggle {
+  justify-self: start;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #c7d8ff;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
 }
 </style>

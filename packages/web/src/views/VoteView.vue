@@ -27,6 +27,7 @@ const { setVoteSession, patchCozeOutput, patchCozeStatus } = useVoteSession()
 const topics = ref<Topic[]>([])
 const selectedTopicId = ref<number | null>(null)
 const selectedSide = ref<VoteSide | null>(null)
+const previewSide = ref<VoteSide | null>(null)
 const selectedMbti = ref<MbtiType | null>(null)
 const sideStats = ref<TopicSideStats | null>(null)
 const isLoading = ref(true)
@@ -44,6 +45,7 @@ const activeTopic = computed(() => {
 
 const hasVoted = computed(() => selectedSide.value !== null)
 const canVote = computed(() => selectedMbti.value !== null)
+const hasPreviewSide = computed(() => previewSide.value !== null)
 
 const supportRate = computed(() => sideStats.value?.sideA.percent ?? 50)
 const opposeRate = computed(() => sideStats.value?.sideB.percent ?? 50)
@@ -94,6 +96,28 @@ const formattedVoteCount = computed(() => {
 
   return new Intl.NumberFormat('zh-CN').format(activeTopic.value.voteCount)
 })
+
+const voteHint = computed(() => {
+  if (!selectedMbti.value) {
+    return '先选 MBTI，再锁定你准备下注的阵营。'
+  }
+
+  if (!previewSide.value) {
+    return '先点一下红方或蓝方卡片，按钮会切到更明确的入场动作。'
+  }
+
+  return previewSide.value === 'support'
+    ? '已锁定红方预选，点击主按钮后会立即计票并刷新战局。'
+    : '已锁定蓝方预选，准备逆风上票，点击主按钮立即入场。'
+})
+
+const supportButtonText = computed(() =>
+  previewSide.value === 'support' ? '确认加入红方' : '🔴 加入红方'
+)
+
+const opposeButtonText = computed(() =>
+  previewSide.value === 'oppose' ? '确认加入蓝方' : '🔵 加入蓝方'
+)
 
 const iqLeft = computed(() => {
   if (!isMinority.value) {
@@ -211,6 +235,7 @@ async function handleVote(side: VoteSide) {
     replaceTopic(result.data.topic)
     sideStats.value = result.data.sideStats
     selectedSide.value = mapTopicSideToVoteSide(result.data.side)
+    previewSide.value = selectedSide.value
     ElMessage.success(result.message)
     void triggerCozeWorkflow(side)
   } catch (error: unknown) {
@@ -222,10 +247,15 @@ async function handleVote(side: VoteSide) {
 
 function resetVote() {
   selectedSide.value = null
+  previewSide.value = null
 }
 
 function selectTopic(id: number) {
   selectedTopicId.value = id
+}
+
+function selectPreviewSide(side: VoteSide) {
+  previewSide.value = side
 }
 
 function goToPersonaRoast() {
@@ -238,6 +268,7 @@ function goToOpinions() {
 
 watch(selectedTopicId, (topicId) => {
   selectedSide.value = null
+  previewSide.value = null
 
   if (topicId) {
     void loadTopicDetail(topicId)
@@ -319,6 +350,9 @@ onMounted(() => {
           <StancePanel
             :support-label="activeTopic.sideA.label"
             :oppose-label="activeTopic.sideB.label"
+            :selected-side="previewSide"
+            interactive
+            @select="selectPreviewSide"
           />
 
           <section class="vote-strip">
@@ -326,14 +360,19 @@ onMounted(() => {
               <span>当前参战人数</span>
               <strong>{{ formattedVoteCount }}</strong>
             </div>
-            <p>站队后才会计入你的阵营，并刷新红蓝双方占比。</p>
+            <p>{{ voteHint }}</p>
           </section>
 
           <VoteActions
-            :disabled="isVoting || isTopicLoading || !canVote"
+            :disabled="isVoting || isTopicLoading || !canVote || !hasPreviewSide"
+            :selected-side="previewSide"
+            :support-text="supportButtonText"
+            :oppose-text="opposeButtonText"
             @vote="handleVote"
           />
-          <p v-if="!canVote" class="vote-card__mbti-hint">选好 MBTI 后才能加入红方或蓝方。</p>
+          <p v-if="!canVote || !hasPreviewSide" class="vote-card__mbti-hint">
+            {{ !canVote ? '选好 MBTI 后才能加入红方或蓝方。' : '先点选阵营卡片，再用按钮完成站队。' }}
+          </p>
         </template>
 
         <template v-else>
@@ -343,6 +382,7 @@ onMounted(() => {
             :support-rate="supportRate"
             :oppose-rate="opposeRate"
             :user-side="selectedSide"
+            reveal
           />
 
           <OutcomeBox

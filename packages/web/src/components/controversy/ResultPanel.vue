@@ -5,11 +5,12 @@ defineProps<{
   supportRate: number
   opposeRate: number
   userSide?: 'support' | 'oppose' | null
+  reveal?: boolean
 }>()
 </script>
 
 <template>
-  <section class="result-panel">
+  <section class="result-panel" :class="{ 'is-revealed': reveal }">
     <header class="result-panel__header">
       <span>战局揭晓</span>
       <strong>多数派压力已刷新</strong>
@@ -21,7 +22,10 @@ defineProps<{
         <strong :class="{ 'is-user': userSide === 'support' }">{{ supportRate }}%</strong>
       </div>
       <div class="result-bar">
-        <div class="result-bar__fill result-bar__fill--support" :style="{ width: `${supportRate}%` }" />
+        <div
+          class="result-bar__fill result-bar__fill--support"
+          :style="{ width: reveal ? `${supportRate}%` : '0%' }"
+        />
       </div>
     </div>
 
@@ -31,7 +35,10 @@ defineProps<{
         <strong :class="{ 'is-user': userSide === 'oppose' }">{{ opposeRate }}%</strong>
       </div>
       <div class="result-bar">
-        <div class="result-bar__fill result-bar__fill--oppose" :style="{ width: `${opposeRate}%` }" />
+        <div
+          class="result-bar__fill result-bar__fill--oppose"
+          :style="{ width: reveal ? `${opposeRate}%` : '0%' }"
+        />
       </div>
     </div>
   </section>
@@ -66,6 +73,24 @@ defineProps<{
 .result-row {
   display: grid;
   gap: 8px;
+  opacity: 0.56;
+  transform: translateY(6px);
+  transition:
+    opacity 0.35s ease,
+    transform 0.35s ease;
+}
+
+.result-panel.is-revealed .result-row {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.result-panel.is-revealed .result-row:nth-child(2) {
+  transition-delay: 0.08s;
+}
+
+.result-panel.is-revealed .result-row:nth-child(3) {
+  transition-delay: 0.16s;
 }
 
 .result-label {
@@ -99,7 +124,7 @@ defineProps<{
 .result-bar__fill {
   height: 100%;
   border-radius: inherit;
-  transition: width 0.45s ease;
+  transition: width 0.6s ease;
 }
 
 .result-bar__fill--support {
