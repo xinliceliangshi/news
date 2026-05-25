@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 
@@ -23,6 +23,12 @@ const registerForm = ref({
   password: '',
   confirmPassword: ''
 })
+
+const panelHint = computed(() =>
+  activeTab.value === 'login'
+    ? '已有账号就直接进入争议流程，系统会把你送到投票页。'
+    : '第一次来先注册，完成后会直接进入投票页开始站队。'
+)
 
 async function handleLogin() {
   if (!loginForm.value.email || !loginForm.value.password) {
@@ -49,6 +55,11 @@ async function handleRegister() {
     return
   }
 
+  if (registerForm.value.password !== registerForm.value.confirmPassword) {
+    ElMessage.warning('两次输入的密码不一致')
+    return
+  }
+
   isRegisterSubmitting.value = true
 
   try {
@@ -70,7 +81,7 @@ async function handleRegister() {
     <div class="auth-panel__header">
       <span class="badge">用户入口</span>
       <h2>欢迎回来，也欢迎第一次来站队。</h2>
-      <p>先完成身份进入，再去投票、看结果、看对面怎么说。</p>
+      <p>{{ panelHint }}</p>
     </div>
 
     <el-tabs v-model="activeTab" class="auth-tabs" stretch>
@@ -104,6 +115,11 @@ async function handleRegister() {
           >
             登录进入
           </el-button>
+
+          <p class="auth-switch-tip">
+            第一次来？
+            <button type="button" class="text-link" @click="activeTab = 'register'">直接去注册</button>
+          </p>
         </el-form>
       </el-tab-pane>
 
@@ -146,6 +162,11 @@ async function handleRegister() {
           >
             注册并开始围观
           </el-button>
+
+          <p class="auth-switch-tip">
+            已有账号？
+            <button type="button" class="text-link" @click="activeTab = 'login'">切回登录</button>
+          </p>
         </el-form>
       </el-tab-pane>
     </el-tabs>

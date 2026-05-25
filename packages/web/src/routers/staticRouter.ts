@@ -8,17 +8,17 @@ export const staticRouter: RouteRecordRaw[] = [
     redirect: '/login'
   },
   {
+    path: '/login',
+    name: 'login',
+    component: () => import('@/views/AuthLandingView.vue'),
+    meta: {
+      title: '登录注册'
+    }
+  },
+  {
     path: '/',
     component: AppShell,
     children: [
-      {
-        path: 'login',
-        name: 'login',
-        component: () => import('@/views/AuthLandingView.vue'),
-        meta: {
-          title: '登录注册'
-        }
-      },
       {
         path: 'vote',
         name: 'vote',
