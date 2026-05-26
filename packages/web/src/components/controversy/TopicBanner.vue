@@ -31,7 +31,7 @@ const moodMeta = computed(() => getTopicMoodMeta(moodId.value))
           <span /><span /><span />
         </div>
         <div class="topic-banner__desk" />
-        <span class="topic-banner__chip">AI</span>
+      
       </template>
 
       <template v-else-if="moodId === 'cyber-net'">
@@ -159,7 +159,7 @@ const moodMeta = computed(() => getTopicMoodMeta(moodId.value))
 .topic-banner__chip {
   position: absolute;
   right: 118px;
-  top: 54px;
+  top: 64px;
   padding: 4px 8px;
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.12);
