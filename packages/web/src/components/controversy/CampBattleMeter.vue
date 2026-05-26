@@ -72,17 +72,20 @@ const tensionLabel = computed(() => {
   gap: 14px;
   padding: 18px;
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 22px;
+  border-radius: 20px;
   background:
-    linear-gradient(135deg, rgba(255, 109, 69, 0.08), transparent 42%),
-    linear-gradient(225deg, rgba(90, 140, 255, 0.1), transparent 46%),
-    rgba(255, 255, 255, 0.04);
+    linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02)),
+    rgba(255, 255, 255, 0.03);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 .camp-meter--compact {
   gap: 10px;
-  padding: 14px;
-  border-radius: 18px;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
 }
 
 .camp-meter__teams {
@@ -132,20 +135,23 @@ const tensionLabel = computed(() => {
   transform: translateY(-1px);
 }
 
-.camp-meter__team--support.camp-meter__team--active {
-  text-shadow: 0 0 18px rgba(255, 138, 93, 0.45);
+.camp-meter__team--support.camp-meter__team--active strong {
+  color: #fff4e5;
+  text-shadow: 0 0 16px rgba(255, 180, 140, 0.35);
 }
 
-.camp-meter__team--oppose.camp-meter__team--active {
-  text-shadow: 0 0 18px rgba(123, 174, 255, 0.45);
+.camp-meter__team--oppose.camp-meter__team--active strong {
+  color: #fff4e5;
+  text-shadow: 0 0 16px rgba(123, 174, 255, 0.32);
 }
 
 .camp-meter__vs {
   align-self: center;
-  padding: 8px 10px;
+  padding: 6px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.08);
-  color: #fff4e5;
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(199, 216, 255, 0.82);
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.12em;
@@ -154,7 +160,7 @@ const tensionLabel = computed(() => {
 .camp-meter__track {
   position: relative;
   display: flex;
-  height: 14px;
+  height: 10px;
   overflow: hidden;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.06);
@@ -176,13 +182,13 @@ const tensionLabel = computed(() => {
 
 .camp-meter__midline {
   position: absolute;
-  top: 2px;
-  bottom: 2px;
+  top: 1px;
+  bottom: 1px;
   left: 50%;
-  width: 2px;
+  width: 1px;
   transform: translateX(-50%);
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0.22);
 }
 
 .camp-meter__tension {

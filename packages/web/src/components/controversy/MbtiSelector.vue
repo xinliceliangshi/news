@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { PERSONA_CONFIGS, type MbtiType } from '../../constants/personas'
+import { PERSONA_CONFIGS, getPersonaThemeStyle, type MbtiType } from '../../constants/personas'
 
 const model = defineModel<MbtiType | null>({ required: true })
 </script>
@@ -18,6 +18,7 @@ const model = defineModel<MbtiType | null>({ required: true })
         type="button"
         class="mbti-chip"
         :class="{ 'mbti-chip--active': model === persona.mbti }"
+        :style="getPersonaThemeStyle(persona.mbti)"
         @click="model = persona.mbti"
       >
         <strong>{{ persona.mbti }}</strong>
@@ -31,9 +32,6 @@ const model = defineModel<MbtiType | null>({ required: true })
 .mbti-selector {
   display: grid;
   gap: 12px;
-  padding: 16px 18px;
-  border-radius: 18px;
-  background: rgba(255, 255, 255, 0.04);
 }
 
 .mbti-selector__header {
@@ -41,6 +39,7 @@ const model = defineModel<MbtiType | null>({ required: true })
   align-items: baseline;
   justify-content: space-between;
   gap: 12px;
+  padding: 0 2px;
 }
 
 .mbti-selector__header span {
@@ -71,17 +70,20 @@ const model = defineModel<MbtiType | null>({ required: true })
 .mbti-chip {
   display: grid;
   gap: 4px;
-  padding: 10px 0;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.03);
+  padding: 11px 0;
+  border: 1px solid var(--persona-border, rgba(255, 255, 255, 0.1));
+  border-radius: 14px;
+  background:
+    radial-gradient(circle at top, var(--persona-glow, rgba(255, 255, 255, 0.08)), transparent 72%),
+    rgba(255, 255, 255, 0.03);
   color: rgba(247, 241, 232, 0.88);
   letter-spacing: 0.04em;
   cursor: pointer;
   transition:
     border-color 0.2s ease,
     background 0.2s ease,
-    transform 0.2s ease;
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .mbti-chip strong,
@@ -95,24 +97,29 @@ const model = defineModel<MbtiType | null>({ required: true })
 }
 
 .mbti-chip span {
-  color: rgba(247, 241, 232, 0.58);
+  color: var(--persona-text, rgba(247, 241, 232, 0.58));
+  opacity: 0.72;
   font-size: 0.72rem;
   font-weight: 600;
 }
 
 .mbti-chip:hover {
-  border-color: rgba(255, 138, 93, 0.42);
+  border-color: var(--persona-accent, rgba(255, 138, 93, 0.42));
   transform: translateY(-1px);
 }
 
 .mbti-chip--active {
-  border-color: rgba(255, 138, 93, 0.55);
-  background: rgba(255, 110, 69, 0.16);
-  color: #fff4e5;
+  border-color: var(--persona-accent, rgba(255, 138, 93, 0.55));
+  background:
+    radial-gradient(circle at top, var(--persona-glow, rgba(255, 255, 255, 0.14)), transparent 72%),
+    var(--persona-soft, rgba(255, 110, 69, 0.16));
+  color: var(--persona-text, #fff4e5);
+  box-shadow: 0 14px 28px var(--persona-soft, rgba(255, 110, 69, 0.14));
 }
 
 .mbti-chip--active span {
-  color: rgba(255, 244, 229, 0.82);
+  color: var(--persona-text, rgba(255, 244, 229, 0.82));
+  opacity: 0.9;
 }
 
 @media (max-width: 640px) {

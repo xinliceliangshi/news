@@ -30,15 +30,23 @@ defineProps<{
 .outcome-box {
   display: grid;
   gap: 10px;
-  padding: 18px;
+  padding: 18px 18px 16px;
   border-radius: 20px;
-  border: 1px solid rgba(123, 174, 255, 0.28);
-  background: linear-gradient(135deg, rgba(90, 140, 255, 0.12), rgba(255, 255, 255, 0.03));
+  border: 1px solid rgba(123, 174, 255, 0.32);
+  background:
+    linear-gradient(135deg, rgba(90, 140, 255, 0.16), transparent 58%),
+    rgba(255, 255, 255, 0.03);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
 .outcome-box--minority {
-  border-color: rgba(255, 110, 69, 0.34);
-  background: linear-gradient(135deg, rgba(255, 109, 69, 0.14), rgba(255, 255, 255, 0.03));
+  border-color: rgba(255, 110, 69, 0.38);
+  background:
+    linear-gradient(135deg, rgba(255, 109, 69, 0.18), transparent 58%),
+    rgba(255, 255, 255, 0.03);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 12px 32px rgba(255, 109, 69, 0.1);
 }
 
 .outcome-box__meta {

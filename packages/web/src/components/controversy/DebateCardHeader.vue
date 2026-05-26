@@ -26,13 +26,20 @@ defineProps<{
   align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
+  padding-bottom: 4px;
+}
+
+.card-header .badge {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 244, 229, 0.92);
 }
 
 .card-header h2 {
-  margin: 14px 0 0;
-  font-size: clamp(1.35rem, 3vw, 1.9rem);
-  line-height: 1.15;
-  letter-spacing: -0.03em;
+  margin: 12px 0 0;
+  max-width: 18ch;
+  font-size: clamp(1.4rem, 3.2vw, 2rem);
+  line-height: 1.12;
+  letter-spacing: -0.04em;
 }
 
 .card-header__meta {
@@ -44,17 +51,21 @@ defineProps<{
 .card-status {
   flex-shrink: 0;
   padding: 10px 14px;
+  border: 1px solid rgba(255, 138, 93, 0.28);
   border-radius: 999px;
-  background: rgba(255, 110, 69, 0.14);
+  background: rgba(255, 110, 69, 0.12);
   color: #ffbc9c;
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.06em;
+  box-shadow: 0 8px 24px rgba(255, 109, 69, 0.12);
 }
 
 .card-status--result {
-  background: rgba(90, 140, 255, 0.16);
+  border-color: rgba(123, 174, 255, 0.32);
+  background: rgba(90, 140, 255, 0.14);
   color: #c7d8ff;
+  box-shadow: 0 8px 24px rgba(90, 140, 255, 0.12);
 }
 
 @media (max-width: 640px) {

@@ -49,8 +49,11 @@ defineProps<{
   display: grid;
   gap: 14px;
   padding: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 20px;
-  background: rgba(255, 255, 255, 0.04);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02)),
+    rgba(255, 255, 255, 0.03);
 }
 
 .result-panel__header {

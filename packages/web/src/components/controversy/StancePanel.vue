@@ -67,21 +67,34 @@ function handleSelect(side: VoteSide) {
 .stance-panel {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-  gap: 12px;
+  gap: 14px;
   align-items: stretch;
 }
 
 .stance {
+  position: relative;
   display: grid;
   gap: 8px;
-  padding: 16px;
-  border-radius: 18px;
-  background: rgba(255, 255, 255, 0.04);
+  padding: 18px 16px 16px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.03);
+  overflow: hidden;
   transition:
     transform 0.2s ease,
     border-color 0.2s ease,
     box-shadow 0.2s ease,
     background 0.2s ease;
+}
+
+.stance::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 3px;
+  border-radius: 20px 20px 0 0;
+  opacity: 0.7;
 }
 
 .stance.is-interactive {
@@ -119,8 +132,12 @@ function handleSelect(side: VoteSide) {
 }
 
 .stance--support {
-  border: 1px solid rgba(255, 110, 69, 0.32);
-  box-shadow: inset 0 0 24px rgba(255, 109, 69, 0.08);
+  border: 1px solid rgba(255, 110, 69, 0.28);
+  box-shadow: inset 0 -24px 40px rgba(255, 109, 69, 0.06);
+}
+
+.stance--support::after {
+  background: linear-gradient(90deg, #ff6d45, #ff9a6d);
 }
 
 .stance--support strong {
@@ -128,15 +145,20 @@ function handleSelect(side: VoteSide) {
 }
 
 .stance--support.is-selected {
-  border-color: rgba(255, 138, 93, 0.6);
+  border-color: rgba(255, 138, 93, 0.55);
+  background: linear-gradient(180deg, rgba(255, 109, 69, 0.14), rgba(255, 255, 255, 0.04));
   box-shadow:
-    inset 0 0 28px rgba(255, 109, 69, 0.12),
-    0 14px 36px rgba(255, 109, 69, 0.12);
+    inset 0 0 32px rgba(255, 109, 69, 0.1),
+    0 16px 40px rgba(255, 109, 69, 0.14);
 }
 
 .stance--oppose {
-  border: 1px solid rgba(90, 140, 255, 0.32);
-  box-shadow: inset 0 0 24px rgba(90, 140, 255, 0.08);
+  border: 1px solid rgba(90, 140, 255, 0.28);
+  box-shadow: inset 0 -24px 40px rgba(90, 140, 255, 0.06);
+}
+
+.stance--oppose::after {
+  background: linear-gradient(90deg, #5a8cff, #7baeff);
 }
 
 .stance--oppose strong {
@@ -144,10 +166,11 @@ function handleSelect(side: VoteSide) {
 }
 
 .stance--oppose.is-selected {
-  border-color: rgba(123, 174, 255, 0.62);
+  border-color: rgba(123, 174, 255, 0.55);
+  background: linear-gradient(180deg, rgba(90, 140, 255, 0.14), rgba(255, 255, 255, 0.04));
   box-shadow:
-    inset 0 0 28px rgba(90, 140, 255, 0.12),
-    0 14px 36px rgba(90, 140, 255, 0.12);
+    inset 0 0 32px rgba(90, 140, 255, 0.1),
+    0 16px 40px rgba(90, 140, 255, 0.14);
 }
 
 .stance__divider {
@@ -156,13 +179,16 @@ function handleSelect(side: VoteSide) {
 }
 
 .stance__divider span {
-  padding: 10px 12px;
+  padding: 12px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.08);
+  background:
+    linear-gradient(135deg, rgba(255, 109, 69, 0.16), rgba(90, 140, 255, 0.16)),
+    rgba(255, 255, 255, 0.06);
   color: #fff4e5;
   font-size: 11px;
   font-weight: 800;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.14em;
 }
 
 @media (max-width: 720px) {

@@ -6,7 +6,7 @@ import PageFrame from '../components/common/PageFrame.vue'
 import { HttpError } from '../api/client'
 import { fetchTopicById } from '../api/topic'
 import { useVoteSession } from '../composables/useVoteSession'
-import { getPersonaConfig, getRecommendedPersonaTypes } from '../constants/personas'
+import { getPersonaConfig, getPersonaThemeStyle, getRecommendedPersonaTypes } from '../constants/personas'
 import type { Topic } from '../types/topic'
 import { extractCozeOutput } from '../utils/cozeOutput'
 
@@ -274,7 +274,12 @@ onMounted(() => {
     <div v-else class="summary-layout">
       <section class="summary-panel summary-panel--hero">
         <div>
-          <span class="summary-eyebrow">本次争议</span>
+          <span
+            class="summary-eyebrow"
+            :style="voteSession?.mbti ? getPersonaThemeStyle(voteSession.mbti) : undefined"
+          >
+            本次争议
+          </span>
           <h3>{{ voteSession?.topicTitle }}</h3>
           <p>
             {{ voteSession?.mbti }} · {{ personaConfig?.label }} ｜ {{ voteSession?.sideLabel }}
@@ -282,7 +287,11 @@ onMounted(() => {
           </p>
         </div>
 
-        <div class="summary-hero__badge" :class="{ 'is-minority': isMinority }">
+        <div
+          class="summary-hero__badge"
+          :class="{ 'is-minority': isMinority }"
+          :style="voteSession?.mbti ? getPersonaThemeStyle(voteSession.mbti) : undefined"
+        >
           <span>{{ isMinority ? '少数派' : sideStats ? '多数派' : '立场已锁定' }}</span>
           <strong>{{ verdictHeadline || voteSession?.sideLabel }}</strong>
         </div>
@@ -460,8 +469,8 @@ onMounted(() => {
   display: inline-flex;
   padding: 7px 12px;
   border-radius: 999px;
-  background: rgba(255, 110, 69, 0.12);
-  color: #ffbc9c;
+  background: var(--persona-soft, rgba(255, 110, 69, 0.12));
+  color: var(--persona-text, #ffbc9c);
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -471,15 +480,36 @@ onMounted(() => {
 .summary-hero__badge {
   display: grid;
   gap: 8px;
-  min-width: 180px;
+  min-width: 220px;
   padding: 18px;
+  border: 1px solid var(--persona-border, rgba(255, 255, 255, 0.08));
   border-radius: 22px;
-  background: linear-gradient(135deg, rgba(90, 140, 255, 0.18), rgba(116, 214, 159, 0.12));
+  background:
+    radial-gradient(circle at top right, var(--persona-glow, rgba(255, 255, 255, 0.16)), transparent 38%),
+    linear-gradient(135deg, var(--persona-soft, rgba(255, 255, 255, 0.08)), rgba(255, 255, 255, 0.04));
   text-align: right;
 }
 
+.summary-hero__badge span,
+.summary-hero__badge strong {
+  display: block;
+}
+
+.summary-hero__badge span {
+  color: rgba(247, 241, 232, 0.68);
+  font-size: 0.82rem;
+}
+
+.summary-hero__badge strong {
+  margin-top: 10px;
+  color: var(--persona-text, #fff4e5);
+  font-size: 1.06rem;
+}
+
 .summary-hero__badge.is-minority {
-  background: linear-gradient(135deg, rgba(255, 109, 69, 0.22), rgba(255, 206, 112, 0.12));
+  background:
+    radial-gradient(circle at top right, rgba(255, 196, 128, 0.16), transparent 38%),
+    linear-gradient(135deg, rgba(255, 109, 69, 0.16), rgba(255, 206, 112, 0.08));
 }
 
 .summary-hero__badge span {

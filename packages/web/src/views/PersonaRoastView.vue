@@ -7,7 +7,7 @@ import PageFrame from '../components/common/PageFrame.vue'
 import { runCozeWorkflow } from '../api/coze'
 import { HttpError } from '../api/client'
 import { useVoteSession } from '../composables/useVoteSession'
-import { getPersonaConfig } from '../constants/personas'
+import { getPersonaConfig, getPersonaThemeStyle } from '../constants/personas'
 import { extractCozeOutput } from '../utils/cozeOutput'
 
 const router = useRouter()
@@ -86,6 +86,7 @@ async function retryGenerate() {
 
     <div v-else class="placeholder-stack">
       <article class="placeholder-card">
+        <div v-if="voteSession?.mbti" class="roast-persona-card" :style="getPersonaThemeStyle(voteSession.mbti)" />
         <span>人格标签</span>
         <strong>{{ voteSession?.mbti }} · {{ personaConfig?.label }} · {{ voteSession?.sideLabel }}</strong>
         <p>{{ personaConfig?.summary }}</p>
@@ -109,6 +110,22 @@ async function retryGenerate() {
 </template>
 
 <style scoped>
+.placeholder-card:has(.roast-persona-card) {
+  position: relative;
+  overflow: hidden;
+}
+
+.roast-persona-card {
+  position: absolute;
+  inset: 0;
+  border: 1px solid var(--persona-border, rgba(255, 255, 255, 0.08));
+  border-radius: inherit;
+  background:
+    radial-gradient(circle at 88% 14%, var(--persona-glow, rgba(255, 255, 255, 0.14)), transparent 30%),
+    linear-gradient(135deg, var(--persona-soft, rgba(255, 255, 255, 0.08)), transparent 55%);
+  pointer-events: none;
+}
+
 .roast-output {
   white-space: pre-wrap;
   word-break: break-word;

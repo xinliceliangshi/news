@@ -9,6 +9,7 @@ import { HttpError } from '../api/client'
 import { fetchTopicById } from '../api/topic'
 import {
   getPersonaConfig,
+  getPersonaThemeStyle,
   getRecommendedPersonaTypes,
   MBTI_TYPES,
   type MbtiType
@@ -213,7 +214,12 @@ onMounted(() => {
     <div v-else class="opinions-layout">
       <section class="opinions-panel opinions-panel--hero">
         <div>
-          <span class="opinions-eyebrow">当前上下文</span>
+          <span
+            class="opinions-eyebrow"
+            :style="voteSession?.mbti ? getPersonaThemeStyle(voteSession.mbti) : undefined"
+          >
+            当前上下文
+          </span>
           <h3>{{ voteSession?.topicTitle }}</h3>
           <p>
             我的人格：{{ voteSession?.mbti }} · {{ sessionPersona?.label }} ｜ 我的立场：{{ voteSession?.sideLabel }}
@@ -244,7 +250,12 @@ onMounted(() => {
         <div>
           <span class="opinions-eyebrow">推荐人格</span>
           <div class="opinions-chip-list">
-            <span v-for="mbti in recommendedTypes" :key="mbti" class="opinions-chip">
+            <span
+              v-for="mbti in recommendedTypes"
+              :key="mbti"
+              class="opinions-chip"
+              :style="getPersonaThemeStyle(mbti)"
+            >
               {{ mbti }} · {{ getPersonaConfig(mbti).label }}
             </span>
           </div>
@@ -258,7 +269,12 @@ onMounted(() => {
       </section>
 
       <section class="opinions-grid">
-        <article v-for="card in opinionCards" :key="`${viewMode}-${card.mbti}`" class="opinions-card">
+        <article
+          v-for="card in opinionCards"
+          :key="`${viewMode}-${card.mbti}`"
+          class="opinions-card"
+          :style="getPersonaThemeStyle(card.mbti)"
+        >
           <header class="opinions-card__header">
             <div>
               <span class="opinions-eyebrow">{{ card.mbti }}</span>
@@ -333,8 +349,8 @@ onMounted(() => {
   display: inline-flex;
   padding: 7px 12px;
   border-radius: 999px;
-  background: rgba(255, 110, 69, 0.12);
-  color: #ffbc9c;
+  background: var(--persona-soft, rgba(255, 110, 69, 0.12));
+  color: var(--persona-text, #ffbc9c);
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -388,10 +404,12 @@ onMounted(() => {
   display: inline-flex;
   align-items: center;
   padding: 10px 14px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--persona-border, rgba(255, 255, 255, 0.08));
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.04);
-  color: #f7f1e8;
+  background:
+    linear-gradient(135deg, var(--persona-soft, rgba(255, 255, 255, 0.06)), rgba(255, 255, 255, 0.04)),
+    rgba(255, 255, 255, 0.04);
+  color: var(--persona-text, #f7f1e8);
   font-weight: 700;
 }
 
@@ -415,6 +433,10 @@ onMounted(() => {
   display: grid;
   gap: 18px;
   padding: 22px;
+  border-color: var(--persona-border, rgba(255, 255, 255, 0.08));
+  background:
+    radial-gradient(circle at 88% 16%, var(--persona-glow, rgba(255, 255, 255, 0.14)), transparent 24%),
+    linear-gradient(180deg, var(--persona-soft, rgba(255, 255, 255, 0.06)), rgba(255, 255, 255, 0.03));
 }
 
 .opinions-card__header {

@@ -51,8 +51,9 @@ watch(
   display: grid;
   gap: 12px;
   padding: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
   border-radius: 20px;
-  background: rgba(255, 255, 255, 0.04);
+  background: rgba(255, 255, 255, 0.03);
 }
 
 .comment-panel__header {
@@ -87,9 +88,10 @@ watch(
   grid-template-columns: auto 1fr;
   gap: 12px;
   align-items: start;
-  padding: 14px;
+  padding: 14px 14px 14px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 16px;
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.04);
 }
 
 .comment-panel__rank {
