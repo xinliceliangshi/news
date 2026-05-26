@@ -7,6 +7,7 @@ import PageFrame from '../components/common/PageFrame.vue'
 import { runCozeWorkflow } from '../api/coze'
 import { HttpError } from '../api/client'
 import { useVoteSession } from '../composables/useVoteSession'
+import { getPersonaConfig } from '../constants/personas'
 import { extractCozeOutput } from '../utils/cozeOutput'
 
 const router = useRouter()
@@ -33,6 +34,9 @@ const isGenerating = computed(
 )
 
 const hasFailed = computed(() => hasSession.value && cozeStatus.value === 'error' && !isRetrying.value)
+const personaConfig = computed(() =>
+  voteSession.value?.mbti ? getPersonaConfig(voteSession.value.mbti) : null
+)
 
 function goToVote() {
   void router.push({ name: 'vote' })
@@ -83,7 +87,8 @@ async function retryGenerate() {
     <div v-else class="placeholder-stack">
       <article class="placeholder-card">
         <span>人格标签</span>
-        <strong>{{ voteSession?.mbti }} · {{ voteSession?.sideLabel }}</strong>
+        <strong>{{ voteSession?.mbti }} · {{ personaConfig?.label }} · {{ voteSession?.sideLabel }}</strong>
+        <p>{{ personaConfig?.summary }}</p>
         <p>议题：{{ voteSession?.topicTitle }}</p>
       </article>
 

@@ -17,7 +17,7 @@ import VoteActions from '../components/controversy/VoteActions.vue'
 import { runCozeWorkflow } from '../api/coze'
 import { fetchTopicById, fetchTopics, voteOnTopic } from '../api/topic'
 import { useVoteSession } from '../composables/useVoteSession'
-import type { MbtiType } from '../constants/mbti'
+import { getPersonaConfig, type MbtiType } from '../constants/personas'
 import { HttpError } from '../api/client'
 import { buildOpposingCampComments } from '../utils/campComments'
 import type { VoteSide } from '../types/controversy'
@@ -98,6 +98,10 @@ const formattedVoteCount = computed(() => {
 
   return new Intl.NumberFormat('zh-CN').format(activeTopic.value.voteCount)
 })
+
+const selectedPersona = computed(() =>
+  selectedMbti.value ? getPersonaConfig(selectedMbti.value) : null
+)
 
 const voteHint = computed(() => {
   if (!selectedMbti.value) {
@@ -381,6 +385,10 @@ onMounted(() => {
           <p v-if="!canVote || !hasPreviewSide" class="vote-card__mbti-hint">
             {{ !canVote ? '选好 MBTI 后才能加入红方或蓝方。' : '先点选阵营卡片，再用按钮完成站队。' }}
           </p>
+          <section v-if="selectedPersona" class="vote-card__persona-tip">
+            <strong>{{ selectedPersona.mbti }} · {{ selectedPersona.label }}</strong>
+            <p>{{ selectedPersona.summary }}</p>
+          </section>
         </template>
 
         <template v-else>
@@ -403,7 +411,7 @@ onMounted(() => {
           <CommentPanel :comments="opposingCamp.comments" :camp-label="opposingCamp.campLabel" />
 
           <section v-if="selectedMbti" class="vote-card__mbti-badge">
-            你的 MBTI：<strong>{{ selectedMbti }}</strong>
+            你的人格：<strong>{{ selectedMbti }} · {{ getPersonaConfig(selectedMbti).label }}</strong>
           </section>
 
           <section class="vote-result-actions">
@@ -598,6 +606,25 @@ onMounted(() => {
   color: rgba(255, 196, 164, 0.88);
   font-size: 0.84rem;
   text-align: center;
+}
+
+.vote-card__persona-tip {
+  display: grid;
+  gap: 6px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.vote-card__persona-tip strong {
+  color: #fff4e5;
+  font-size: 0.94rem;
+}
+
+.vote-card__persona-tip p {
+  margin: 0;
+  color: rgba(247, 241, 232, 0.64);
+  font-size: 0.84rem;
 }
 
 .vote-card__mbti-badge {

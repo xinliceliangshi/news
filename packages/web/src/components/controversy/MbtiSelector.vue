@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { MBTI_TYPES, type MbtiType } from '../../constants/mbti'
+import { PERSONA_CONFIGS, type MbtiType } from '../../constants/personas'
 
 const model = defineModel<MbtiType | null>({ required: true })
 </script>
@@ -13,14 +13,15 @@ const model = defineModel<MbtiType | null>({ required: true })
     <p class="mbti-selector__hint">站队前选好人格类型，投票后会按议题、阵营和 MBTI 生成锐评。</p>
     <div class="mbti-selector__grid">
       <button
-        v-for="type in MBTI_TYPES"
-        :key="type"
+        v-for="persona in PERSONA_CONFIGS"
+        :key="persona.mbti"
         type="button"
         class="mbti-chip"
-        :class="{ 'mbti-chip--active': model === type }"
-        @click="model = type"
+        :class="{ 'mbti-chip--active': model === persona.mbti }"
+        @click="model = persona.mbti"
       >
-        {{ type }}
+        <strong>{{ persona.mbti }}</strong>
+        <span>{{ persona.label }}</span>
       </button>
     </div>
   </section>
@@ -68,19 +69,35 @@ const model = defineModel<MbtiType | null>({ required: true })
 }
 
 .mbti-chip {
+  display: grid;
+  gap: 4px;
   padding: 10px 0;
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.03);
   color: rgba(247, 241, 232, 0.88);
-  font-size: 0.82rem;
-  font-weight: 700;
   letter-spacing: 0.04em;
   cursor: pointer;
   transition:
     border-color 0.2s ease,
     background 0.2s ease,
     transform 0.2s ease;
+}
+
+.mbti-chip strong,
+.mbti-chip span {
+  display: block;
+}
+
+.mbti-chip strong {
+  font-size: 0.84rem;
+  font-weight: 800;
+}
+
+.mbti-chip span {
+  color: rgba(247, 241, 232, 0.58);
+  font-size: 0.72rem;
+  font-weight: 600;
 }
 
 .mbti-chip:hover {
@@ -92,6 +109,10 @@ const model = defineModel<MbtiType | null>({ required: true })
   border-color: rgba(255, 138, 93, 0.55);
   background: rgba(255, 110, 69, 0.16);
   color: #fff4e5;
+}
+
+.mbti-chip--active span {
+  color: rgba(255, 244, 229, 0.82);
 }
 
 @media (max-width: 640px) {

@@ -7,8 +7,12 @@ import PageFrame from '../components/common/PageFrame.vue'
 import { runCozeWorkflow } from '../api/coze'
 import { HttpError } from '../api/client'
 import { fetchTopicById } from '../api/topic'
-import { MBTI_TYPES, type MbtiType } from '../constants/mbti'
-import { mbtiOpinionRecommendations } from '../data/personaOpinions'
+import {
+  getPersonaConfig,
+  getRecommendedPersonaTypes,
+  MBTI_TYPES,
+  type MbtiType
+} from '../constants/personas'
 import { useVoteSession } from '../composables/useVoteSession'
 import type { VoteSide } from '../types/controversy'
 import type { Topic } from '../types/topic'
@@ -42,8 +46,12 @@ const recommendedTypes = computed<MbtiType[]>(() => {
     return []
   }
 
-  return mbtiOpinionRecommendations[mbti] ?? MBTI_TYPES.filter((type) => type !== mbti).slice(0, 3)
+  return getRecommendedPersonaTypes(mbti) ?? MBTI_TYPES.filter((type) => type !== mbti).slice(0, 3)
 })
+
+const sessionPersona = computed(() =>
+  voteSession.value?.mbti ? getPersonaConfig(voteSession.value.mbti) : null
+)
 
 const activeSideLabel = computed(() => {
   if (!voteSession.value) {
@@ -207,7 +215,9 @@ onMounted(() => {
         <div>
           <span class="opinions-eyebrow">当前上下文</span>
           <h3>{{ voteSession?.topicTitle }}</h3>
-          <p>我的人格：{{ voteSession?.mbti }} ｜ 我的立场：{{ voteSession?.sideLabel }}</p>
+          <p>
+            我的人格：{{ voteSession?.mbti }} · {{ sessionPersona?.label }} ｜ 我的立场：{{ voteSession?.sideLabel }}
+          </p>
         </div>
 
         <div class="opinions-toggle" role="tablist" aria-label="观点模式切换">
@@ -234,7 +244,9 @@ onMounted(() => {
         <div>
           <span class="opinions-eyebrow">推荐人格</span>
           <div class="opinions-chip-list">
-            <span v-for="mbti in recommendedTypes" :key="mbti" class="opinions-chip">{{ mbti }}</span>
+            <span v-for="mbti in recommendedTypes" :key="mbti" class="opinions-chip">
+              {{ mbti }} · {{ getPersonaConfig(mbti).label }}
+            </span>
           </div>
         </div>
 
@@ -250,7 +262,7 @@ onMounted(() => {
           <header class="opinions-card__header">
             <div>
               <span class="opinions-eyebrow">{{ card.mbti }}</span>
-              <strong>{{ card.sideLabel }}</strong>
+              <strong>{{ getPersonaConfig(card.mbti).label }} · {{ card.sideLabel }}</strong>
             </div>
             <span class="opinions-status" :class="`opinions-status--${card.status}`">
               {{

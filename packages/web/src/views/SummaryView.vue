@@ -6,7 +6,7 @@ import PageFrame from '../components/common/PageFrame.vue'
 import { HttpError } from '../api/client'
 import { fetchTopicById } from '../api/topic'
 import { useVoteSession } from '../composables/useVoteSession'
-import { mbtiOpinionRecommendations } from '../data/personaOpinions'
+import { getPersonaConfig, getRecommendedPersonaTypes } from '../constants/personas'
 import type { Topic } from '../types/topic'
 import { extractCozeOutput } from '../utils/cozeOutput'
 
@@ -92,8 +92,12 @@ const recommendedPersonas = computed(() => {
     return []
   }
 
-  return mbtiOpinionRecommendations[mbti] ?? []
+  return getRecommendedPersonaTypes(mbti) ?? []
 })
+
+const personaConfig = computed(() =>
+  voteSession.value?.mbti ? getPersonaConfig(voteSession.value.mbti) : null
+)
 
 const pageDescription = computed(() => {
   if (!hasSession.value) {
@@ -123,7 +127,7 @@ const journeySteps = computed<JourneyStep[]>(() => {
     {
       key: 'vote',
       label: '投票站队',
-      detail: `${session.sideLabel} · ${session.mbti}`,
+      detail: `${session.sideLabel} · ${session.mbti} · ${getPersonaConfig(session.mbti).label}`,
       status: 'done',
       routeName: 'vote'
     },
@@ -184,7 +188,7 @@ const verdictBody = computed(() => {
   }
 
   const parts: string[] = [
-    `围绕「${session.topicTitle}」，你以 ${session.mbti} 的身份选择了 ${session.sideLabel}。`
+    `围绕「${session.topicTitle}」，你以 ${session.mbti}${personaConfig.value ? `（${personaConfig.value.label}）` : ''} 的身份选择了 ${session.sideLabel}。`
   ]
 
   if (sideStats.value && topic.value) {
@@ -273,7 +277,7 @@ onMounted(() => {
           <span class="summary-eyebrow">本次争议</span>
           <h3>{{ voteSession?.topicTitle }}</h3>
           <p>
-            {{ voteSession?.mbti }} ｜ {{ voteSession?.sideLabel }}
+            {{ voteSession?.mbti }} · {{ personaConfig?.label }} ｜ {{ voteSession?.sideLabel }}
             <template v-if="topic?.tags.length"> ｜ {{ topic.tags.join(' · ') }}</template>
           </p>
         </div>
