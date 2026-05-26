@@ -3,6 +3,7 @@ import { computed, ref } from 'vue'
 
 import CommentPanel from '../components/controversy/CommentPanel.vue'
 import DebateCardHeader from '../components/controversy/DebateCardHeader.vue'
+import TopicBanner from '../components/controversy/TopicBanner.vue'
 import OutcomeBox from '../components/controversy/OutcomeBox.vue'
 import ResultPanel from '../components/controversy/ResultPanel.vue'
 import StageHero from '../components/controversy/StageHero.vue'
@@ -32,6 +33,8 @@ function resetVote() {
 
       <article class="main-card">
         <div class="main-card__glow" />
+
+        <TopicBanner mood="keyboard-war" :hot-score="96" />
 
         <DebateCardHeader :title="controversyTopic.title" :has-voted="hasVoted" />
 

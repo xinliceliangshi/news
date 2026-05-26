@@ -7,6 +7,8 @@ import PageFrame from '../components/common/PageFrame.vue'
 import CampBattleMeter from '../components/controversy/CampBattleMeter.vue'
 import CommentPanel from '../components/controversy/CommentPanel.vue'
 import DebateCardHeader from '../components/controversy/DebateCardHeader.vue'
+import TopicBanner from '../components/controversy/TopicBanner.vue'
+import { getTopicMoodMeta, resolveTopicMood } from '../constants/topicMoods'
 import OutcomeBox from '../components/controversy/OutcomeBox.vue'
 import ResultPanel from '../components/controversy/ResultPanel.vue'
 import StancePanel from '../components/controversy/StancePanel.vue'
@@ -309,7 +311,7 @@ onMounted(() => {
           :class="{ 'vote-topic-item--active': topic.id === selectedTopicId }"
           @click="selectTopic(topic.id)"
         >
-          <span>{{ topic.tags[0] ?? '争议' }}</span>
+          <span>{{ getTopicMoodMeta(resolveTopicMood(topic.tags, topic.id)).label }}</span>
           <strong>{{ topic.title }}</strong>
           <p>热度 {{ topic.hotScore }} · {{ new Intl.NumberFormat('zh-CN').format(topic.voteCount) }} 票</p>
         </button>
@@ -317,6 +319,12 @@ onMounted(() => {
 
       <article v-if="activeTopic" class="vote-card">
         <div class="vote-card__glow" aria-hidden="true" />
+
+        <TopicBanner
+          :tags="activeTopic.tags"
+          :topic-id="activeTopic.id"
+          :hot-score="activeTopic.hotScore"
+        />
 
         <DebateCardHeader
           :title="activeTopic.title"
